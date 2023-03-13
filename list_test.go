@@ -217,6 +217,55 @@ func TestList_Find(t *testing.T) {
 	}
 }
 
+func TestList_ComplexUseCase(t *testing.T) {
+	lst := list.New(1, 2, 3)
+	lst.RemoveBack()
+	lst.RemoveFront()
+	lst.RemoveFront()
+	lst.RemoveBack()
+	lst.RemoveFront()
+
+	if lst.Len() != 0 {
+		t.Fatalf("list must be empty, but still has %d elements", lst.Len())
+	}
+
+	if lst.Back() != nil {
+		t.Fatal("list back element must not be present")
+	}
+
+	if lst.Front() != nil {
+		t.Fatal("list front element must not be present")
+	}
+
+	sl1 := []int{1, 2, 3, 4}
+	lst.Append(sl1...)
+	if total := len(sl1); lst.Len() != total {
+		t.Fatalf("list must have %d elements", total)
+	}
+
+	sl2 := []int{5, 6, 7, 8}
+	lst.PushListBack(list.New(sl2...))
+	if total := len(sl1) + len(sl2); lst.Len() != total {
+		t.Fatalf("list must have %d elements", total)
+	}
+
+	elem := lst.Find(func(val int) bool { return val%3 == 0 })
+	if actual, expected := elem.Value(), 3; actual != expected {
+		t.Fatalf("exepcted to find %d but got %d", expected, actual)
+	}
+
+	lst.MoveAfter(elem, lst.Front())
+	want := []int{1, 3, 2, 4, 5, 6, 7, 8}
+	if err := compareListAndSlice(lst, want); err != nil {
+		t.Fatal(err)
+	}
+
+	lst.Clear()
+	if lst.Len() != 0 {
+		t.Fatal("list has been cleared but still has length more than 0")
+	}
+}
+
 func compareListAndSlice[E any](lst *list.List[E], sl []E) error {
 	if lstLen, slLen := lst.Len(), len(sl); lstLen != slLen {
 		return fmt.Errorf("expected slice has %d elements, but list has %d", slLen, lstLen)
