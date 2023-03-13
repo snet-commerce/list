@@ -37,7 +37,7 @@ type List[E any] struct {
 	len  int
 }
 
-// New initialises new List with initial number of elements passed
+// New constructs new List with initial number of elements passed
 func New[E any](values ...E) *List[E] {
 	list := &List[E]{}
 	for i := range values {
