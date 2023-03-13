@@ -51,7 +51,7 @@ func (l *List[E]) Len() int {
 	return l.len
 }
 
-// Clear cleanups List
+// Clear remove all elements from List
 func (l *List[E]) Clear() {
 	l.head = nil
 	l.tail = nil
@@ -70,17 +70,13 @@ func (l *List[E]) Back() *Element[E] {
 
 // PushFront insert element in the head of List
 func (l *List[E]) PushFront(val E) *Element[E] {
-	elem := &Element[E]{value: val, list: l}
-
-	if l.head == nil {
-		l.head = elem
-		l.tail = elem
-	} else {
-		elem.next = l.head
-		l.head.prev = elem
-		l.head = elem
+	if l.head != nil {
+		return l.InsertBefore(val, l.head)
 	}
 
+	elem := &Element[E]{value: val, list: l}
+	l.head = elem
+	l.tail = elem
 	l.len++
 
 	return elem
@@ -88,22 +84,19 @@ func (l *List[E]) PushFront(val E) *Element[E] {
 
 // PushBack insert element in the tail of List
 func (l *List[E]) PushBack(val E) *Element[E] {
-	elem := &Element[E]{value: val, list: l}
-
-	if l.head == nil {
-		l.head = elem
-		l.tail = elem
-	} else {
-		l.tail.next = elem
-		elem.prev = l.tail
-		l.tail = elem
+	if l.tail != nil {
+		return l.InsertAfter(val, l.tail)
 	}
 
+	elem := &Element[E]{value: val, list: l}
+	l.head = elem
+	l.tail = elem
 	l.len++
 
 	return elem
 }
 
+// InsertBefore inserts new Element before specified
 func (l *List[E]) InsertBefore(val E, bfr *Element[E]) *Element[E] {
 	if bfr == nil || bfr.list != l {
 		return nil
@@ -125,6 +118,7 @@ func (l *List[E]) InsertBefore(val E, bfr *Element[E]) *Element[E] {
 	return elem
 }
 
+// InsertAfter inserts new Element after specified
 func (l *List[E]) InsertAfter(val E, aft *Element[E]) *Element[E] {
 	if aft == nil || aft.list != l {
 		return nil
@@ -146,40 +140,23 @@ func (l *List[E]) InsertAfter(val E, aft *Element[E]) *Element[E] {
 	return elem
 }
 
+// RemoveFront removes Element on head
 func (l *List[E]) RemoveFront() (val E) {
 	if l.head == nil {
 		return val
 	}
-
-	val = l.head.Value()
-	l.head = l.head.next
-	if l.head != nil {
-		l.head.prev = nil
-	} else {
-		l.tail = nil
-	}
-	l.len--
-
-	return val
+	return l.Remove(l.head)
 }
 
+// RemoveBack removes Element on tail
 func (l *List[E]) RemoveBack() (val E) {
 	if l.tail == nil {
 		return val
 	}
-
-	val = l.tail.Value()
-	l.tail = l.tail.prev
-	if l.tail != nil {
-		l.tail.next = nil
-	} else {
-		l.head = nil
-	}
-	l.len--
-
-	return val
+	return l.Remove(l.tail)
 }
 
+// Remove removes specified Element
 func (l *List[E]) Remove(elem *Element[E]) (val E) {
 	if elem == nil || elem.list != l {
 		return val
@@ -202,14 +179,17 @@ func (l *List[E]) Remove(elem *Element[E]) (val E) {
 	return elem.Value()
 }
 
+// MoveToFront move specified Element to the head
 func (l *List[E]) MoveToFront(elem *Element[E]) {
 	l.MoveBefore(elem, l.head)
 }
 
+// MoveToBack moves specified Element to the tail
 func (l *List[E]) MoveToBack(elem *Element[E]) {
 	l.MoveAfter(elem, l.tail)
 }
 
+// MoveBefore moves Element after specified
 func (l *List[E]) MoveBefore(elem, bfr *Element[E]) {
 	if elem == nil || bfr == nil || elem.list != l || bfr.list != l || elem == bfr {
 		return
@@ -232,6 +212,7 @@ func (l *List[E]) MoveBefore(elem, bfr *Element[E]) {
 	bfr.prev = elem
 }
 
+// MoveAfter moves Element after specified
 func (l *List[E]) MoveAfter(elem, aft *Element[E]) {
 	if elem == nil || aft == nil || elem.list != l || aft.list != l || elem == aft {
 		return
@@ -254,12 +235,14 @@ func (l *List[E]) MoveAfter(elem, aft *Element[E]) {
 	aft.next = elem
 }
 
+// PushListBack appends all elements from other List to current
 func (l *List[E]) PushListBack(other *List[E]) {
 	for e := other.Front(); e != nil; e = e.Next() {
 		l.PushBack(e.Value())
 	}
 }
 
+// Find returns first Element matching the condition
 func (l *List[E]) Find(matcher func(E) bool) *Element[E] {
 	for e := l.Front(); e != nil; e = e.Next() {
 		if matcher(e.Value()) {
@@ -269,12 +252,14 @@ func (l *List[E]) Find(matcher func(E) bool) *Element[E] {
 	return nil
 }
 
+// Append push several elements to tail of List
 func (l *List[E]) Append(values ...E) {
 	for i := range values {
 		l.PushBack(values[i])
 	}
 }
 
+// Slice returns all elements of List as slice
 func (l *List[E]) Slice() []E {
 	sl := make([]E, 0, l.len)
 	for e := l.Front(); e != nil; e = e.Next() {
