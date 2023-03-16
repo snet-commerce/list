@@ -10,7 +10,7 @@ type Element[E any] struct {
 	list  *List[E]
 	next  *Element[E]
 	prev  *Element[E]
-	value E
+	Value E
 }
 
 // Next returns next Element or nil if next element is not present
@@ -21,11 +21,6 @@ func (e *Element[E]) Next() *Element[E] {
 // Prev returns previous Element or nil if previous element is not present
 func (e *Element[E]) Prev() *Element[E] {
 	return e.prev
-}
-
-// Value returns value stored in current Element
-func (e *Element[E]) Value() E {
-	return e.value
 }
 
 // List returns List to which current Element belongs
@@ -77,7 +72,7 @@ func (l *List[E]) PushFront(val E) *Element[E] {
 		return l.InsertBefore(val, l.head)
 	}
 
-	elem := &Element[E]{value: val, list: l}
+	elem := &Element[E]{Value: val, list: l}
 	l.head = elem
 	l.tail = elem
 	l.len++
@@ -91,7 +86,7 @@ func (l *List[E]) PushBack(val E) *Element[E] {
 		return l.InsertAfter(val, l.tail)
 	}
 
-	elem := &Element[E]{value: val, list: l}
+	elem := &Element[E]{Value: val, list: l}
 	l.head = elem
 	l.tail = elem
 	l.len++
@@ -105,7 +100,7 @@ func (l *List[E]) InsertBefore(val E, bfr *Element[E]) *Element[E] {
 		return nil
 	}
 
-	elem := &Element[E]{value: val, list: l}
+	elem := &Element[E]{Value: val, list: l}
 	if bfr.prev == nil {
 		elem.next = bfr
 		bfr.prev = elem
@@ -127,7 +122,7 @@ func (l *List[E]) InsertAfter(val E, aft *Element[E]) *Element[E] {
 		return nil
 	}
 
-	elem := &Element[E]{value: val, list: l}
+	elem := &Element[E]{Value: val, list: l}
 	if aft.next == nil {
 		elem.prev = aft
 		aft.next = elem
@@ -179,14 +174,16 @@ func (l *List[E]) Remove(elem *Element[E]) (val E) {
 
 	l.len--
 
-	return elem.value
+	return elem.Value
 }
 
 // RemoveAllWhere removes all elements matching the condition
 func (l *List[E]) RemoveAllWhere(matcher MatcherFunc[E]) {
-	for e := l.Front(); e != nil; e = e.Next() {
-		if matcher(e.value) {
-			l.Remove(e)
+	for e := l.Front(); e != nil; {
+		rm := e
+		e = e.Next()
+		if matcher(rm.Value) {
+			l.Remove(rm)
 		}
 	}
 }
@@ -250,14 +247,14 @@ func (l *List[E]) MoveAfter(elem, aft *Element[E]) {
 // PushListBack appends all elements from other List to current
 func (l *List[E]) PushListBack(other *List[E]) {
 	for e := other.Front(); e != nil; e = e.Next() {
-		l.PushBack(e.value)
+		l.PushBack(e.Value)
 	}
 }
 
 // Find returns first Element matching the condition
 func (l *List[E]) Find(matcher MatcherFunc[E]) *Element[E] {
 	for e := l.Front(); e != nil; e = e.Next() {
-		if matcher(e.value) {
+		if matcher(e.Value) {
 			return e
 		}
 	}
@@ -268,8 +265,8 @@ func (l *List[E]) Find(matcher MatcherFunc[E]) *Element[E] {
 func (l *List[E]) FindAllAsListWhere(matcher MatcherFunc[E]) *List[E] {
 	lst := New[E]()
 	for e := l.Front(); e != nil; e = e.Next() {
-		if matcher(e.value) {
-			lst.PushBack(e.value)
+		if matcher(e.Value) {
+			lst.PushBack(e.Value)
 		}
 	}
 	return lst
@@ -279,8 +276,8 @@ func (l *List[E]) FindAllAsListWhere(matcher MatcherFunc[E]) *List[E] {
 func (l *List[E]) FindAllAsSliceWhere(matcher MatcherFunc[E]) []E {
 	sl := make([]E, 0, l.len)
 	for e := l.Front(); e != nil; e = e.Next() {
-		if matcher(e.value) {
-			sl = append(sl, e.value)
+		if matcher(e.Value) {
+			sl = append(sl, e.Value)
 		}
 	}
 	return sl
@@ -289,7 +286,7 @@ func (l *List[E]) FindAllAsSliceWhere(matcher MatcherFunc[E]) []E {
 // Contains checks if element is present in List
 func (l *List[E]) Contains(matcher MatcherFunc[E]) bool {
 	for e := l.Front(); e != nil; e = e.Next() {
-		if matcher(e.value) {
+		if matcher(e.Value) {
 			return true
 		}
 	}
@@ -307,7 +304,7 @@ func (l *List[E]) Append(values ...E) {
 func (l *List[E]) Slice() []E {
 	sl := make([]E, 0, l.len)
 	for e := l.Front(); e != nil; e = e.Next() {
-		sl = append(sl, e.value)
+		sl = append(sl, e.Value)
 	}
 	return sl
 }

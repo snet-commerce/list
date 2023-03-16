@@ -28,13 +28,13 @@ func TestList_PushBack(t *testing.T) {
 	pushBackValues := []string{"str5", "str6", "str7"}
 	for _, pushVal := range pushBackValues {
 		elem := lst.PushBack(pushVal)
-		if val := elem.Value(); val != pushVal {
+		if val := elem.Value; val != pushVal {
 			t.Fatalf("new element must be equal %s, but got %s", pushVal, val)
 		}
 	}
 
-	if backElem, lastPushElem := lst.Back(), pushBackValues[len(pushBackValues)-1]; backElem == nil || backElem.Value() != lastPushElem {
-		t.Fatalf("new element is %s, but list back elemet is %s", lastPushElem, backElem.Value())
+	if backElem, lastPushElem := lst.Back(), pushBackValues[len(pushBackValues)-1]; backElem == nil || backElem.Value != lastPushElem {
+		t.Fatalf("new element is %s, but list back elemet is %s", lastPushElem, backElem.Value)
 	}
 
 	want = append(want, pushBackValues...)
@@ -54,13 +54,13 @@ func TestList_PushFront(t *testing.T) {
 	pushFrontValues := []string{"str5", "str6", "str7"} // will be inserted in reverse order, since every push is performed in head
 	for _, pushVal := range pushFrontValues {
 		elem := lst.PushFront(pushVal)
-		if val := elem.Value(); val != pushVal {
+		if val := elem.Value; val != pushVal {
 			t.Fatalf("new element must be equal %s, but got %s", pushVal, val)
 		}
 	}
 
-	if frontElem, firstPushElem := lst.Front(), pushFrontValues[len(pushFrontValues)-1]; frontElem == nil || frontElem.Value() != firstPushElem {
-		t.Fatalf("new element is %s, but list front elemet is %s", firstPushElem, frontElem.Value())
+	if frontElem, firstPushElem := lst.Front(), pushFrontValues[len(pushFrontValues)-1]; frontElem == nil || frontElem.Value != firstPushElem {
+		t.Fatalf("new element is %s, but list front elemet is %s", firstPushElem, frontElem.Value)
 	}
 
 	for _, val := range pushFrontValues {
@@ -77,7 +77,7 @@ func TestList_Iteration(t *testing.T) {
 
 	i := 0
 	for e := lst.Front(); e != nil; e = e.Next() {
-		if lstVal, slValue := e.Value(), want[i]; lstVal != slValue {
+		if lstVal, slValue := e.Value, want[i]; lstVal != slValue {
 			t.Fatalf("values on forward iteration (index %d) are not equal, list has element %d, slice %d", i, lstVal, slValue)
 		}
 		i++
@@ -85,7 +85,7 @@ func TestList_Iteration(t *testing.T) {
 
 	i = len(want) - 1
 	for e := lst.Back(); e != nil; e = e.Prev() {
-		if lstVal, slValue := e.Value(), want[i]; lstVal != slValue {
+		if lstVal, slValue := e.Value, want[i]; lstVal != slValue {
 			t.Fatalf("values on backward iteration (index %d) are not equal, list has element %d, slice %d", i, lstVal, slValue)
 		}
 		i--
@@ -212,8 +212,67 @@ func TestList_Find(t *testing.T) {
 	elem := lst.Find(func(numb number) bool {
 		return numb.n < 0
 	})
-	if actual, expected := elem.Value().n, -7; actual != expected { // first negative in list
+	if actual, expected := elem.Value.n, -7; actual != expected { // first negative in list
 		t.Fatalf("first struct with negative value in list must have value %d, but got %d", expected, actual)
+	}
+}
+
+func TestList_Contains(t *testing.T) {
+	sl := []int{1, 2, 3, 4, 5, 6, 7, 8, 9}
+	lst := list.New(sl...)
+
+	if containVal := sl[5]; !lst.Contains(func(el int) bool {
+		return el == containVal
+	}) {
+		t.Fatalf("list contains value %d, but Contains method returned false", containVal)
+	}
+
+	if containVal := 10; lst.Contains(func(val int) bool {
+		return val == containVal
+	}) {
+		t.Fatalf("list doesn't contain value %d, but Contains method returned true", containVal)
+	}
+}
+
+func TestList_RemoveAllWhere(t *testing.T) {
+	sl := []int{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11}
+	lst := list.New(sl...)
+
+	lst.RemoveAllWhere(func(val int) bool {
+		return val%2 == 0
+	})
+
+	want := []int{1, 3, 5, 7, 9, 11}
+	if err := compareListAndSlice(lst, want); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestList_FindAllAsListWhere(t *testing.T) {
+	sl := []int{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11}
+	lst := list.New(sl...)
+
+	findLst := lst.FindAllAsListWhere(func(val int) bool {
+		return val%2 == 0
+	})
+
+	want := []int{0, 2, 4, 6, 8, 10}
+	if err := compareListAndSlice(findLst, want); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestList_FindAllAsSliceWhere(t *testing.T) {
+	sl := []int{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11}
+	lst := list.New(sl...)
+
+	findSl := lst.FindAllAsSliceWhere(func(val int) bool {
+		return val%2 == 0
+	})
+
+	want := []int{0, 2, 4, 6, 8, 10}
+	if !reflect.DeepEqual(want, findSl) {
+		t.Fatalf("expected slice and slice for search result are not equal, expected %v != actual %v", want, findSl)
 	}
 }
 
@@ -250,7 +309,7 @@ func TestList_ComplexUseCase(t *testing.T) {
 	}
 
 	elem := lst.Find(func(val int) bool { return val%3 == 0 })
-	if actual, expected := elem.Value(), 3; actual != expected {
+	if actual, expected := elem.Value, 3; actual != expected {
 		t.Fatalf("exepcted to find %d but got %d", expected, actual)
 	}
 
