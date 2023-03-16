@@ -1,5 +1,8 @@
 package list
 
+// MatcherFunc represents predicate for element matching some condition
+type MatcherFunc[E any] func(E) bool
+
 // Element is a single element of List.
 // Each Element has a reference to a list it belongs to, so it is safe (still avoid doing that) to pass
 // Element to other list, but no action will be taken
@@ -176,7 +179,16 @@ func (l *List[E]) Remove(elem *Element[E]) (val E) {
 
 	l.len--
 
-	return elem.Value()
+	return elem.value
+}
+
+// RemoveAllWhere removes all elements matching the condition
+func (l *List[E]) RemoveAllWhere(matcher MatcherFunc[E]) {
+	for e := l.Front(); e != nil; e = e.Next() {
+		if matcher(e.value) {
+			l.Remove(e)
+		}
+	}
 }
 
 // MoveToFront move specified Element to the head
@@ -238,18 +250,50 @@ func (l *List[E]) MoveAfter(elem, aft *Element[E]) {
 // PushListBack appends all elements from other List to current
 func (l *List[E]) PushListBack(other *List[E]) {
 	for e := other.Front(); e != nil; e = e.Next() {
-		l.PushBack(e.Value())
+		l.PushBack(e.value)
 	}
 }
 
 // Find returns first Element matching the condition
-func (l *List[E]) Find(matcher func(E) bool) *Element[E] {
+func (l *List[E]) Find(matcher MatcherFunc[E]) *Element[E] {
 	for e := l.Front(); e != nil; e = e.Next() {
-		if matcher(e.Value()) {
+		if matcher(e.value) {
 			return e
 		}
 	}
 	return nil
+}
+
+// FindAllAsListWhere returns all elements matching the condition as new List
+func (l *List[E]) FindAllAsListWhere(matcher MatcherFunc[E]) *List[E] {
+	lst := New[E]()
+	for e := l.Front(); e != nil; e = e.Next() {
+		if matcher(e.value) {
+			lst.PushBack(e.value)
+		}
+	}
+	return lst
+}
+
+// FindAllAsSliceWhere returns all elements matching the condition as slice
+func (l *List[E]) FindAllAsSliceWhere(matcher MatcherFunc[E]) []E {
+	sl := make([]E, 0, l.len)
+	for e := l.Front(); e != nil; e = e.Next() {
+		if matcher(e.value) {
+			sl = append(sl, e.value)
+		}
+	}
+	return sl
+}
+
+// Contains checks if element is present in List
+func (l *List[E]) Contains(matcher MatcherFunc[E]) bool {
+	for e := l.Front(); e != nil; e = e.Next() {
+		if matcher(e.value) {
+			return true
+		}
+	}
+	return false
 }
 
 // Append push several elements to tail of List
@@ -263,7 +307,7 @@ func (l *List[E]) Append(values ...E) {
 func (l *List[E]) Slice() []E {
 	sl := make([]E, 0, l.len)
 	for e := l.Front(); e != nil; e = e.Next() {
-		sl = append(sl, e.Value())
+		sl = append(sl, e.value)
 	}
 	return sl
 }
